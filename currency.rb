@@ -12,24 +12,20 @@ class CurrencyING
   end
 
   def norm(k)
-    k[0].each do |i|
-      i.gsub!(',', '.').to_f
+    begin
+      k[0].each do |i|
+        i.gsub!(',', '.').to_f
+      end
+      {'kupno' => k[0][0].to_f, 'sprzedaz' => k[0][1].to_f}
+    rescue
+      puts "Something went wrong!"
+      exit
     end
-    {'kupno' => k[0][0].to_f, 'sprzedaz' => k[0][1].to_f}
   end
 
-  def gbp
-    k = @text.scan(form('GBP'))
-    norm(k)
-  end
-
-  def usd
-    k = @text.scan(form('USD'))
-    norm(k)
-  end
-
-  def eur
-    k = @text.scan(form('EUR'))
+  def method_missing(*args)
+    code = (args.shift).to_s.upcase!
+    k = @text.scan(form(code))
     norm(k)
   end
 end
@@ -51,24 +47,21 @@ class CurrencyKantor
   end
 
   def norm(k)
-    k[0].each do |i|
-      i.gsub!(',', '.').to_f
+    begin
+      k[0].each do |i|
+        i.gsub!(',', '.').to_f
+      end
+      {'kupno' => ((k[0][0].to_f)/100.0).round(4), 'sprzedaz' => ((k[0][1].to_f)/100.0).round(4)}
+    rescue
+      puts "Something went wrong!"
+      exit
     end
-    {'kupno' => (k[0][0].to_f)/100.0, 'sprzedaz' => (k[0][1].to_f)/100.0}
+
   end
 
-  def gbp
-    k = @text.scan(form('GBP'))
-    norm(k)
-  end
-
-  def usd
-    k = @text.scan(form('USD'))
-    norm(k)
-  end
-
-  def eur
-    k = @text.scan(form('EUR'))
+  def method_missing(*args)
+    code = (args.shift).to_s.upcase!
+    k = @text.scan(form(code))
     norm(k)
   end
 end
@@ -104,4 +97,9 @@ def main
 HTML
 end
 
-File.write('currency.html', main)
+# File.write('currency.html', main)
+
+
+c = CurrencyING.new
+
+puts c.ser
