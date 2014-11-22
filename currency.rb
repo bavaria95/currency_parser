@@ -1,14 +1,24 @@
-class CurrencyING
+class Currency
 
-  def initialize
+  def initialize(bank)    #can be "ING" or "Kantor"
     require 'net/http'
-    uri = URI("http://www.ingbank.pl/kursy-walut")
+    if bank =~ /ING/
+      uri = URI("http://www.ingbank.pl/kursy-walut")
+      @template = "\\(#code\\)<\/td><td class=\"col_3\"><span class=\"price\">([\\d,]*) PLN<\/span><\/td><td class=\"col_4\"><span class=\"price\">([\\d,]*) PLN<\/span><\/td>"
+      @coef = 1.0
+    end
+    if bank =~ /Kantor/
+      uri = URI("http://www.kantor-exchange.pl")
+      @template = "<td class=\"waluta\"><h3>100 #code<\/h3><\/td><td class=\"kupno\"><h4 class=\"waluty\">([\\d,]*)<\/h4><\/td><td class=\"sprzedaz\"><h4 class=\"waluty\">([\\d,]*)<\/h4><\/td>"
+      @coef = 100.0
+    end
+
     res = Net::HTTP.get_response(uri)
     @text = res.body
-  end
 
-  def form(code)
-    Regexp.new("\\(#{code}\\)<\/td><td class=\"col_3\"><span class=\"price\">([\\d,]*) PLN<\/span><\/td><td class=\"col_4\"><span class=\"price\">([\\d,]*) PLN<\/span><\/td>")
+    if bank =~ /Kantor/
+      @text.gsub!(/\s{2,}/, '')
+    end
   end
 
   def norm(k)
@@ -16,7 +26,7 @@ class CurrencyING
       k[0].each do |i|
         i.gsub!(',', '.').to_f
       end
-      {'kupno' => k[0][0].to_f, 'sprzedaz' => k[0][1].to_f}
+      {'kupno' => (k[0][0].to_f / @coef).round(4), 'sprzedaz' => (k[0][1].to_f / @coef).round(4)}
     rescue
       puts "Something went wrong!"
       exit
@@ -25,51 +35,16 @@ class CurrencyING
 
   def method_missing(*args)
     code = (args.shift).to_s.upcase!
-    k = @text.scan(form(code))
-    norm(k)
-  end
-end
-
-
-
-
-class CurrencyKantor
-  def initialize
-    require 'net/http'
-    uri = URI("http://www.kantor-exchange.pl")
-    res = Net::HTTP.get_response(uri)
-    @text = res.body
-    @text.gsub!(/\s{2,}/, '')
-  end
-
-  def form(code)
-    Regexp.new("<td class=\"waluta\"><h3>100 #{code}<\/h3><\/td><td class=\"kupno\"><h4 class=\"waluty\">([\\d,]*)<\/h4><\/td><td class=\"sprzedaz\"><h4 class=\"waluty\">([\\d,]*)<\/h4><\/td>")
-  end
-
-  def norm(k)
-    begin
-      k[0].each do |i|
-        i.gsub!(',', '.').to_f
-      end
-      {'kupno' => ((k[0][0].to_f)/100.0).round(4), 'sprzedaz' => ((k[0][1].to_f)/100.0).round(4)}
-    rescue
-      puts "Something went wrong!"
-      exit
-    end
-
-  end
-
-  def method_missing(*args)
-    code = (args.shift).to_s.upcase!
-    k = @text.scan(form(code))
+    re = Regexp.new(@template.gsub('#code', code))
+    k = @text.scan(re)
     norm(k)
   end
 end
 
 
 def main
-  ing = CurrencyING.new
-  kantor = CurrencyKantor.new
+  ing = Currency.new('ING')
+  kantor = Currency.new('Kantor')
 
   html = <<-HTML
    <table border="1">
@@ -97,9 +72,5 @@ def main
 HTML
 end
 
-# File.write('currency.html', main)
+File.write('currency.html', main)
 
-
-c = CurrencyING.new
-
-puts c.ser
