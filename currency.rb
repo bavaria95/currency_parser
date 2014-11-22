@@ -21,12 +21,13 @@ class Currency
     end
   end
 
+  
   def norm(k)
     begin
       k[0].each do |i|
         i.gsub!(',', '.').to_f
       end
-      {'kupno' => (k[0][0].to_f / @coef).round(4), 'sprzedaz' => (k[0][1].to_f / @coef).round(4)}
+      {'buying' => (k[0][0].to_f / @coef).round(4), 'selling' => (k[0][1].to_f / @coef).round(4)}
     rescue
       puts "Something went wrong!"
       exit
@@ -60,13 +61,13 @@ def main
    	<th>Kupno</th>
    	<th>Sprzedaż</th>
    </tr>
-   <tr><td>USD</td><td>#{ing.usd['kupno']}</td><td>#{ing.usd['sprzedaz']}</td><td>#{kantor.usd['kupno']}</td><td>#{kantor.usd['sprzedaz']}</td></tr>
-   <tr><td>EUR</td><td>#{ing.eur['kupno']}</td><td>#{ing.eur['sprzedaz']}</td><td>#{kantor.eur['kupno']}</td><td>#{kantor.eur['sprzedaz']}</td></tr>
-   <tr><td>GBP</td><td>#{ing.gbp['kupno']}</td><td>#{ing.gbp['sprzedaz']}</td><td>#{kantor.gbp['kupno']}</td><td>#{kantor.gbp['sprzedaz']}</td></tr>
+   <tr><td>USD</td><td>#{ing.usd['buying']}</td><td>#{ing.usd['selling']}</td><td>#{kantor.usd['buying']}</td><td>#{kantor.usd['selling']}</td></tr>
+   <tr><td>EUR</td><td>#{ing.eur['buying']}</td><td>#{ing.eur['selling']}</td><td>#{kantor.eur['buying']}</td><td>#{kantor.eur['selling']}</td></tr>
+   <tr><td>GBP</td><td>#{ing.gbp['buying']}</td><td>#{ing.gbp['selling']}</td><td>#{kantor.gbp['buying']}</td><td>#{kantor.gbp['selling']}</td></tr>
    <tr>
    	<th></th>
-   	<th colspan="2"> K = #{(ing.usd['sprzedaz'] + ing.eur['sprzedaz'] + ing.gbp['sprzedaz'] - ing.usd['kupno'] - ing.eur['kupno'] - ing.gbp['kupno']).round(4) }</th>
-   	<th colspan="2"> K = #{(kantor.usd['sprzedaz'] + kantor.eur['sprzedaz'] + kantor.gbp['sprzedaz'] - kantor.usd['kupno'] - kantor.eur['kupno'] - kantor.gbp['kupno']).round(4) }</th>
+   	<th colspan="2"> K = #{(ing.usd['selling'] + ing.eur['selling'] + ing.gbp['selling'] - ing.usd['buying'] - ing.eur['buying'] - ing.gbp['buying']).round(4) }</th>
+   	<th colspan="2"> K = #{(kantor.usd['selling'] + kantor.eur['selling'] + kantor.gbp['selling'] - kantor.usd['buying'] - kantor.eur['buying'] - kantor.gbp['buying']).round(4) }</th>
    </tr>
   </table>
 HTML
