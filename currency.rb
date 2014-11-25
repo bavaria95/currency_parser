@@ -1,22 +1,24 @@
 class Currency
-
+  attr_accessor :text
   def initialize(bank)    #can be "ING" or "Kantor"
     require 'net/http'
-    if bank =~ /ING/
+    @bank = bank
+    if @bank =~ /ING/
       uri = URI("http://www.ingbank.pl/kursy-walut")
       @template = "\\(#code\\)<\/td><td class=\"col_3\"><span class=\"price\">([\\d,]*) PLN<\/span><\/td><td class=\"col_4\"><span class=\"price\">([\\d,]*) PLN<\/span><\/td>"
       @coef = 1.0
     end
-    if bank =~ /Kantor/
+    if @bank =~ /Kantor/
       uri = URI("http://www.kantor-exchange.pl")
-      @template = "<td class=\"waluta\"><h3>100 #code<\/h3><\/td><td class=\"kupno\"><h4 class=\"waluty\">([\\d,]*)<\/h4><\/td><td class=\"sprzedaz\"><h4 class=\"waluty\">([\\d,]*)<\/h4><\/td>"
+      # @template = "<td class=\"waluta\"><h3>100 #code<\/h3><\/td><td class=\"kupno\"><h4 class=\"waluty\">([\\d,]*)<\/h4><\/td><td class=\"sprzedaz\"><h4 class=\"waluty\">([\\d,]*)<\/h4><\/td>"
+      @template = "#code<\/td><td class=\"price\"><span>([\\d]+),<\/span><span class=\"super\">([\\d]+)<\/span><\/td><td class=\"price\"><span>([\\d]+),<\/span><span class=\"super\">([\\d]+)<\/span><\/td><\/tr>"
       @coef = 100.0
     end
 
     res = Net::HTTP.get_response(uri)
     @text = res.body
 
-    if bank =~ /Kantor/
+    if @bank =~ /Kantor/
       @text.gsub!(/\s{2,}/, '')
     end
   end
@@ -30,7 +32,7 @@ class Currency
       {'buying' => (k[0][0].to_f / @coef).round(4), 'selling' => (k[0][1].to_f / @coef).round(4)}
     rescue
       puts "Something went wrong!"
-      exit
+      # exit
     end
   end
 
@@ -38,6 +40,9 @@ class Currency
     code = (args.shift).to_s.upcase!
     re = Regexp.new(@template.gsub('#code', code))
     k = @text.scan(re)
+    if (@bank =~ /Kantor/)
+      k = [[(k[0][0].to_f + k[0][1].to_f/100).to_s, (k[0][2].to_f + k[0][3].to_f/100).to_s]]
+    end
     norm(k)
   end
 end
@@ -74,4 +79,3 @@ HTML
 end
 
 File.write('currency.html', main)
-
